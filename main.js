@@ -283,13 +283,13 @@ function triggerExpansionPhase() {
   e.style.color = currentPlayer === 'X' ? 'var(--player-x)' : 'var(--player-o)';
 
   requestAnimationFrame(() => {
-    scaleBoardToFit(); 
+    scaleBoardToFit();
 
     document
       .querySelectorAll('.expand-trigger')
       .forEach((btn) => btn.classList.add('visible'));
 
-    positionExpandButtons(); 
+    positionExpandButtons();
   });
 }
 
@@ -420,4 +420,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   updateModeButtons();
   init();
+});
+
+function showRules() {
+  const panel = document.getElementById('rules-panel');
+  if (!localStorage.getItem('hideRules')) {
+    panel.style.display = 'block';
+  } else {
+    panel.style.display = 'none';
+  }
+}
+
+function closeRules() {
+  const panel = document.getElementById('rules-panel');
+  const dontShow = document.getElementById('dont-show-rules');
+
+  if (dontShow.checked) {
+    localStorage.setItem('hideRules', '1');
+  }
+
+  panel.style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('close-rules').addEventListener('click', closeRules);
+
+  showRules();
 });

@@ -26,9 +26,9 @@
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.min.css" />
+    <link rel="stylesheet" href="style.css" />
     <title>Expanding Tic-Tac-Toe</title>
-    <link rel="shortcut icon" href="favicon.svg" type="image/x-icon">
+    <link rel="shortcut icon" href="favicon.svg" type="image/x-icon" />
   </head>
   <body class="turn-x" oncontextmenu="return false;">
     <a href="https://thumbfeed.com" class="site-logo">
@@ -81,9 +81,28 @@
       <button id="btn-ai">Play vs AI</button>
     </div>
 
+    <div id="rules-panel" class="rules-panel">
+      <h2>How to play</h2>
+
+      <div class="rules-text">
+        <p>• Start with standard 3×3 tic-tac-toe.</p>
+        <p>• Draw? The last player expands the board in one direction.</p>
+        <p>• Board grows by 2 rows and 2 columns.</p>
+        <p>• 4 in a row to win after the first expansion</p>
+        <p>• 5 in a row for all later ones.</p>
+      </div>
+
+      <label class="rules-check">
+        <input type="checkbox" id="dont-show-rules" />
+        Don't show again
+      </label>
+
+      <button id="close-rules">Got it</button>
+    </div>
+
     <!-- ai.js contains the getBestMove() function that runs inside a Web Worker -->
-    <script src="ai.min.js"></script>
+    <script src="ai.js"></script>
     <!-- main.js contains all game logic, rendering, and board management -->
-    <script src="main.min.js"></script>
+    <script src="main.js"></script>
   </body>
 </html>
