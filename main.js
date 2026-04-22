@@ -34,10 +34,30 @@ function computeCellSize(e) {
   );
 }
 
-function applyCellSize(e) {
-  let t = computeCellSize(e);
-  document.documentElement.style.setProperty('--cell-size', t + 'px');
-  return t;
+function applyCellSize() {
+  document.documentElement.style.setProperty('--cell-size', '55px');
+}
+
+function scaleBoardToFit() {
+  let board = document.getElementById('board');
+  let viewport = document.getElementById('game-viewport');
+  if (!board || !viewport) return;
+
+  // reset first so we measure real size
+  board.style.transform = 'scale(1)';
+
+  let boardRect = board.getBoundingClientRect();
+  let vpWidth = viewport.clientWidth * 0.92;
+  let vpHeight = viewport.clientHeight * 0.92;
+
+  let scale = Math.min(
+    vpWidth / boardRect.width,
+    vpHeight / boardRect.height,
+    1, // never upscale
+  );
+
+  board.style.transform = `scale(${scale})`;
+  board.style.transformOrigin = 'center center';
 }
 
 function positionExpandButtons() {
@@ -45,18 +65,21 @@ function positionExpandButtons() {
     viewport = document.getElementById('game-viewport');
   if (!board || !viewport) return;
 
-  let boardRect = board.getBoundingClientRect(),
-    vpRect = viewport.getBoundingClientRect();
+  let boardRect = board.getBoundingClientRect();
+  let vpRect = viewport.getBoundingClientRect();
+  let scale = board.getBoundingClientRect().width / board.offsetWidth;
 
   // Always position buttons outside the expanded (size+2) board dimensions
-  let cellSize =
+  let baseCell =
     parseFloat(
       getComputedStyle(document.documentElement).getPropertyValue(
         '--cell-size',
       ),
     ) || 55;
-  let gap = 8,
-    padding = 12;
+
+  let cellSize = baseCell * scale;
+  let gap = 8 * scale;
+  let padding = 12 * scale;
 
   // Center of the current board in viewport-relative coords
   let cx = boardRect.left - vpRect.left + boardRect.width / 2;
@@ -96,7 +119,7 @@ function init() {
   ((boardData = Array(size)
     .fill(null)
     .map(() => Array(size).fill(''))),
-    applyCellSize(size),
+    applyCellSize(),
     drawBoard(),
     maybeAIMove());
 }
@@ -132,7 +155,10 @@ function drawBoard(e = null) {
         (i.onclick = () => makeMove(r, n));
       a.appendChild(i);
     }
-  requestAnimationFrame(() => positionExpandButtons());
+  requestAnimationFrame(() => {
+    scaleBoardToFit();
+    positionExpandButtons();
+  });
 }
 
 function updateModeButtons() {
@@ -251,14 +277,20 @@ function endGame(e) {
 
 function triggerExpansionPhase() {
   expansionMode = !0;
-  document
-    .querySelectorAll('.expand-trigger')
-    .forEach((e) => e.classList.add('visible'));
+
   let e = document.getElementById('status');
-  ((e.textContent = 'Draw! Expand Board'),
-    (e.style.color =
-      'X' === currentPlayer ? 'var(--player-x)' : 'var(--player-o)'));
-  positionExpandButtons();
+  e.textContent = 'Draw! Expand Board';
+  e.style.color = currentPlayer === 'X' ? 'var(--player-x)' : 'var(--player-o)';
+
+  requestAnimationFrame(() => {
+    scaleBoardToFit(); 
+
+    document
+      .querySelectorAll('.expand-trigger')
+      .forEach((btn) => btn.classList.add('visible'));
+
+    positionExpandButtons(); 
+  });
 }
 
 function doExpand(e) {
@@ -282,7 +314,7 @@ function doExpand(e) {
     o &&
     (o.innerHTML = `<span id="instruction-number">${winTarget}</span> in a row to win.`)
   );
-  ((expansionMode = !1), applyCellSize(size), updateStatus(), drawBoard());
+  ((expansionMode = !1), applyCellSize(), updateStatus(), drawBoard());
   setTimeout(() => {
     document
       .querySelectorAll('.cell')
@@ -353,7 +385,8 @@ function reset() {
 }
 
 window.addEventListener('resize', () => {
-  (applyCellSize(size), positionExpandButtons());
+  scaleBoardToFit();
+  positionExpandButtons();
 });
 
 document.addEventListener('DOMContentLoaded', () => {

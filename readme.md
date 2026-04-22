@@ -1,1 +1,1 @@
-# Expanding Tic-Tac-Toe
+![Expanding Tic-Tac-Toe](./expanding-tic-tac-toe.svg)

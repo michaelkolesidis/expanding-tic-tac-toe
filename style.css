@@ -101,6 +101,7 @@ body {
   .site-logo:hover {
     transform: scale(1.033);
   }
+
   .site-logo:active {
     transform: scale(1);
   }
@@ -110,6 +111,7 @@ body {
 .cell.x {
   transform: scale(1);
 }
+
 .site-logo:focus {
   outline: 0;
 }
@@ -118,13 +120,21 @@ header {
   top: 15px;
   text-align: center;
 }
+
 #logo {
   width: 200px;
 }
-h1 {
-  font-size: 3rem;
-  line-height: 1;
+
+#logo-container {
+  position: relative;
 }
+
+/* h1 {
+  font-size: 2rem;
+  line-height: 1;
+  position: absolute;
+  right: -150px;
+} */
 
 #status {
   font-weight: 900;
