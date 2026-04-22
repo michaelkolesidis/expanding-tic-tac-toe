@@ -1,0 +1,253 @@
+:root {
+  --bg: #f8fafc;
+  --text: #2b2b2b;
+  --cell-default: #f1f5f9;
+  --player-x: #f7637c;
+  --player-o: #66ccff;
+  --win: #51eb89;
+  --accent: #ffcc66;
+  --transition-speed: 0.4s;
+}
+
+* {
+  font-family: 'Nunito', sans-serif;
+  user-select: none;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: background-color var(--transition-speed);
+}
+
+header {
+  position: absolute;
+  top: 15px;
+  text-align: center;
+  pointer-events: none;
+}
+
+h1 {
+  font-size: 3.5rem;
+  line-height: 1;
+}
+
+#status {
+  font-weight: 900;
+  margin-top: 25px;
+  color: var(--player-x);
+  font-size: 1.8rem;
+  transition:
+    color var(--transition-speed),
+    transform 0.2s;
+}
+
+#instruction,
+#instruction-number {
+  font-size: 0.9rem;
+  opacity: 0.6;
+  margin-top: 5px;
+  transition: opacity 0.3s;
+}
+
+#instruction-number {
+  opacity: 1;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-right: 3px;
+}
+
+#game-viewport {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 60vh;
+}
+
+#board {
+  display: grid;
+  gap: 8px;
+  background: white;
+  padding: 12px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  transition: all var(--transition-speed) cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 10;
+}
+
+.cell {
+  width: 55px;
+  height: 55px;
+  background: var(--cell-default);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 900;
+  cursor: pointer;
+  color: white;
+  transition:
+    background var(--transition-speed),
+    transform 0.2s,
+    opacity var(--transition-speed),
+    box-shadow 0.3s;
+}
+
+body.game-over .cell {
+  pointer-events: none;
+}
+
+.animating {
+  animation: cellPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes cellPop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+body.turn-x .cell:not(.x):not(.o):not(.ghost):hover {
+  background-color: #f7637c33;
+}
+body.turn-o .cell:not(.x):not(.o):not(.ghost):hover {
+  background-color: #66ccff33;
+}
+
+.cell.x {
+  background: var(--player-x);
+  transform: scale(1);
+  cursor: default;
+}
+.cell.o {
+  background: var(--player-o);
+  transform: scale(1);
+  cursor: default;
+}
+
+.cell.win {
+  background: var(--win) !important;
+  animation: breathing 2s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(81, 235, 137, 0.6);
+  z-index: 2;
+}
+
+@keyframes breathing {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.cell.ghost {
+  background: transparent;
+  border: 2px dashed #cbd5e1;
+  cursor: default;
+  opacity: 0.4;
+}
+
+#expansion-controls {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.expand-trigger {
+  position: absolute;
+  width: 55px;
+  height: 55px;
+  background: var(--accent);
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.4rem;
+  font-weight: 900;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  opacity: 0;
+  transform: scale(0.5);
+}
+
+.expand-trigger.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.expand-trigger:hover {
+  background: #f8d79d;
+}
+
+.tl {
+  top: 10%;
+  left: 20%;
+}
+.tr {
+  top: 10%;
+  right: 20%;
+}
+.bl {
+  bottom: 10%;
+  left: 20%;
+}
+.br {
+  bottom: 10%;
+  right: 20%;
+}
+
+.mode-buttons {
+  display: flex;
+
+  gap: 10px;
+  position: absolute;
+  bottom: 30px;
+}
+
+button,
+.reset-btn {
+  background: #fff;
+  border-radius: 15px;
+  border: 1px solid #e2e8f0;
+  padding: 10px 20px;
+  cursor: pointer;
+  z-index: 100;
+  font-weight: 500;
+  transition: all 0.2s;
+  font-size: 1.1rem;
+}
+
+button:hover,
+.reset-btn:hover {
+  background: #f1f5f9;
+}
+
+button:active,
+.reset-btn:active {
+  transform: scale(0.95);
+}

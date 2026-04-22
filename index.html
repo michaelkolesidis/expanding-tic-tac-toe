@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Expanding Tic-Tac-Toe XO++</title>
+  </head>
+  <body class="turn-x">
+    <header>
+      <div style="display: flex; align-items: center; gap: 30px">
+        <img
+          src="./expanding-tic-tac-toe.svg"
+          style="width: 200px"
+          alt="Expanding Tic-Tac-Toe logo"
+        />
+        <h1>XO++</h1>
+      </div>
+
+      <div id="status">X to play</div>
+      <div id="instruction">
+        <span id="instruction-number">3</span> in a row to win.
+      </div>
+    </header>
+
+    <div id="game-viewport">
+      <div id="board"></div>
+
+      <div id="expansion-controls">
+        <div
+          class="expand-trigger tl"
+          onmouseenter="showPreview('tl')"
+          onmouseleave="hidePreview()"
+          onclick="doExpand('tl')"
+        >
+          +
+        </div>
+        <div
+          class="expand-trigger tr"
+          onmouseenter="showPreview('tr')"
+          onmouseleave="hidePreview()"
+          onclick="doExpand('tr')"
+        >
+          +
+        </div>
+        <div
+          class="expand-trigger bl"
+          onmouseenter="showPreview('bl')"
+          onmouseleave="hidePreview()"
+          onclick="doExpand('bl')"
+        >
+          +
+        </div>
+        <div
+          class="expand-trigger br"
+          onmouseenter="showPreview('br')"
+          onmouseleave="hidePreview()"
+          onclick="doExpand('br')"
+        >
+          +
+        </div>
+      </div>
+    </div>
+
+    <div class="mode-buttons">
+      <button onclick="setMode('multi')">Multiplayer</button>
+      <button class="reset-btn" onclick="reset()">New Game</button>
+      <button onclick="setMode('ai')">Play vs AI</button>
+    </div>
+
+    <script>
+      let size = 3;
+      let winTarget = 3;
+      let boardData = [];
+      let currentPlayer = 'X';
+      let isGameOver = false;
+      let draws = 0;
+
+      let gameMode = 'multi'; // 'multi' or 'ai'
+      let aiPlayer = 'O';
+
+      let aiThinking = false;
+      let expansionMode = false;
+      let winningPath = null;
+
+      function maybeAIMove() {
+        if (
+          gameMode === 'ai' &&
+          currentPlayer === aiPlayer &&
+          !isGameOver &&
+          !aiThinking
+        ) {
+          aiThinking = true;
+
+          setTimeout(() => {
+            aiMove();
+            aiThinking = false;
+          }, 200);
+        }
+      }
+
+      function init() {
+        boardData = Array(size)
+          .fill(null)
+          .map(() => Array(size).fill(''));
+        drawBoard();
+
+        maybeAIMove();
+      }
+
+      function drawBoard(preview = null) {
+        const displaySize = preview ? size + 2 : size;
+        const boardEl = document.getElementById('board');
+
+        boardEl.style.gridTemplateColumns = `repeat(${displaySize}, 55px)`;
+        boardEl.innerHTML = '';
+
+        for (let r = 0; r < displaySize; r++) {
+          for (let c = 0; c < displaySize; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+
+            let val = '';
+            let isGhost = false;
+
+            // Preview mode
+            if (preview) {
+              const oldR = r - preview.rOff;
+              const oldC = c - preview.cOff;
+
+              if (oldR >= 0 && oldR < size && oldC >= 0 && oldC < size) {
+                val = boardData[oldR][oldC];
+              } else {
+                isGhost = true;
+              }
+            }
+
+            // Normal mode
+            else {
+              val = boardData[r]?.[c] ?? '';
+            }
+
+            // Set value
+            if (val) {
+              cell.textContent = val;
+              cell.classList.add(val.toLowerCase());
+            }
+
+            // Ghost cells
+            if (isGhost) {
+              cell.classList.add('ghost');
+            }
+
+            // Win highlight
+            if (
+              winningPath &&
+              winningPath.some(([wr, wc]) => wr === r && wc === c)
+            ) {
+              cell.classList.add('win');
+            }
+
+            // Expansion animation class
+            if (expansionMode) {
+              cell.classList.add('animating');
+            }
+
+            // Click handling
+            if (!isGameOver && !preview && r < size && c < size) {
+              cell.onclick = () => makeMove(r, c);
+            }
+
+            boardEl.appendChild(cell);
+          }
+        }
+      }
+
+      function setMode(mode) {
+        gameMode = mode;
+        reset();
+      }
+
+      function makeMove(r, c) {
+        if (isGameOver || boardData[r][c]) return;
+
+        // Apply move
+        boardData[r][c] = currentPlayer;
+
+        // Check win
+        const winPath = checkWin(r, c);
+        if (winPath) {
+          endGame(winPath);
+          drawBoard();
+          return;
+        }
+
+        // Check draw
+        const isFull = boardData.every((row) =>
+          row.every((cell) => cell !== ''),
+        );
+
+        drawBoard(); // render after state is fully updated
+
+        if (isFull) {
+          triggerExpansionPhase();
+          return;
+        }
+
+        // Switch player
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        updateStatus();
+
+        if (gameMode === 'ai' && currentPlayer === aiPlayer) {
+          setTimeout(aiMove, 200);
+        }
+      }
+
+      function aiMove() {
+        if (isGameOver) return;
+
+        const boardCopy = boardData.map((row) => [...row]);
+        const move = getBestMove(boardCopy, size, winTarget, aiPlayer);
+
+        if (!move) {
+          console.warn('AI failed to find move');
+          return;
+        }
+
+        const [r, c] = move;
+
+        if (boardData[r][c]) {
+          console.warn('AI chose invalid cell');
+          return;
+        }
+
+        makeMove(r, c);
+      }
+
+      function endGame(winPath) {
+        isGameOver = true;
+        winningPath = winPath;
+
+        document.body.classList.add('game-over');
+
+        const status = document.getElementById('status');
+        status.textContent = `Player ${currentPlayer} Wins!`;
+        status.style.color = 'var(--win)';
+        status.style.transform = 'scale(1.2)';
+
+        drawBoard();
+      }
+
+      function triggerExpansionPhase() {
+        expansionMode = true;
+
+        document
+          .querySelectorAll('.expand-trigger')
+          .forEach((el) => el.classList.add('visible'));
+
+        const status = document.getElementById('status');
+        status.textContent = 'Draw! Expand Board';
+        status.style.color =
+          currentPlayer === 'X' ? 'var(--player-x)' : 'var(--player-o)';
+      }
+
+      function updateStatus() {
+        const status = document.getElementById('status');
+        document.body.className = currentPlayer === 'X' ? 'turn-x' : 'turn-o';
+        status.textContent = `${currentPlayer} to play`;
+        status.style.color =
+          currentPlayer === 'X' ? 'var(--player-x)' : 'var(--player-o)';
+      }
+
+      function showPreview(dir) {
+        const rOff = dir === 'tl' || dir === 'tr' ? 2 : 0;
+        const cOff = dir === 'tl' || dir === 'bl' ? 2 : 0;
+        const boardEl = document.getElementById('board');
+        // Shift origin
+        boardEl.style.transformOrigin = `${dir === 'tl' || dir === 'bl' ? '0%' : '100%'} ${dir === 'tl' || dir === 'tr' ? '0%' : '100%'}`;
+        drawBoard({ rOff, cOff });
+      }
+
+      function hidePreview() {
+        if (!isGameOver) drawBoard();
+      }
+
+      function doExpand(dir) {
+        const rOff = dir === 'tl' || dir === 'tr' ? 2 : 0;
+        const cOff = dir === 'tl' || dir === 'bl' ? 2 : 0;
+
+        const newSize = size + 2;
+        const newBoard = Array(newSize)
+          .fill(null)
+          .map(() => Array(newSize).fill(''));
+
+        for (let r = 0; r < size; r++) {
+          for (let c = 0; c < size; c++) {
+            newBoard[r + rOff][c + cOff] = boardData[r][c];
+          }
+        }
+
+        boardData = newBoard;
+        size = newSize;
+        draws++;
+        winTarget = draws === 1 ? 4 : 5;
+
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+
+        document
+          .querySelectorAll('.expand-trigger')
+          .forEach((el) => el.classList.remove('visible'));
+
+        document.getElementById('instruction').textContent =
+          `${winTarget} in a row to win.`;
+
+        updateStatus();
+        drawBoard();
+        expansionMode = false;
+
+        setTimeout(() => {
+          document
+            .querySelectorAll('.cell')
+            .forEach((cell) => cell.classList.remove('animating'));
+        }, 1000);
+
+        maybeAIMove();
+      }
+
+      function checkWin(r, c) {
+        const char = boardData[r][c];
+        const dirs = [
+          [0, 1],
+          [1, 0],
+          [1, 1],
+          [1, -1],
+        ];
+        for (let [dr, dc] of dirs) {
+          let path = [[r, c]];
+          [
+            [dr, dc],
+            [-dr, -dc],
+          ].forEach(([tr, tc]) => {
+            for (let i = 1; i < winTarget; i++) {
+              let nr = r + tr * i,
+                nc = c + tc * i;
+              if (
+                nr >= 0 &&
+                nr < size &&
+                nc >= 0 &&
+                nc < size &&
+                boardData[nr][nc] === char
+              ) {
+                path.push([nr, nc]);
+              } else break;
+            }
+          });
+          if (path.length >= winTarget) return path;
+        }
+        return null;
+      }
+
+      function reset() {
+        size = 3;
+        winTarget = 3;
+        draws = 0;
+        currentPlayer = 'X';
+        isGameOver = false;
+        winningPath = null;
+        document.body.classList.remove('game-over');
+        document
+          .querySelectorAll('.expand-trigger')
+          .forEach((el) => el.classList.remove('visible'));
+        document.getElementById('status').style.transform = 'scale(1)';
+        document.getElementById('instruction').textContent =
+          '3 in a row to win.';
+        updateStatus();
+        init();
+      }
+
+      init();
+
+      document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')
+          return;
+
+        if (e.code === 'Space' || e.code === 'Enter') {
+          e.preventDefault(); // stop page scroll
+          reset();
+        }
+      });
+
+      // AI
+      function getBestMove(board, size, winTarget, aiPlayer) {
+        const human = aiPlayer === 'X' ? 'O' : 'X';
+
+        const MAX_DEPTH = size <= 5 ? 5 : 3;
+
+        const dirs = [
+          [0, 1],
+          [1, 0],
+          [1, 1],
+          [1, -1],
+        ];
+
+        function inBounds(r, c) {
+          return r >= 0 && r < size && c >= 0 && c < size;
+        }
+
+        function checkWin(player) {
+          for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+              if (board[r][c] !== player) continue;
+
+              for (let [dr, dc] of dirs) {
+                let count = 1;
+
+                for (let i = 1; i < winTarget; i++) {
+                  const nr = r + dr * i;
+                  const nc = c + dc * i;
+                  if (inBounds(nr, nc) && board[nr][nc] === player) count++;
+                  else break;
+                }
+
+                if (count >= winTarget) return true;
+              }
+            }
+          }
+          return false;
+        }
+
+        function getMoves() {
+          const moves = [];
+
+          for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+              if (!board[r][c] && hasNeighbor(r, c)) {
+                moves.push([r, c]);
+              }
+            }
+          }
+
+          // Fallback if filtering too strict
+          if (moves.length === 0) {
+            for (let r = 0; r < size; r++) {
+              for (let c = 0; c < size; c++) {
+                if (!board[r][c]) moves.push([r, c]);
+              }
+            }
+          }
+
+          return moves;
+        }
+
+        function hasNeighbor(r, c) {
+          for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+              const nr = r + dr;
+              const nc = c + dc;
+              if (inBounds(nr, nc) && board[nr][nc]) return true;
+            }
+          }
+          return false;
+        }
+
+        // Pattern scoring
+        function evaluateLine(count, openEnds) {
+          if (count >= winTarget) return 100000;
+
+          if (count === winTarget - 1 && openEnds === 2) return 10000;
+          if (count === winTarget - 1 && openEnds === 1) return 5000;
+
+          if (count === winTarget - 2 && openEnds === 2) return 1000;
+          if (count === winTarget - 2 && openEnds === 1) return 200;
+
+          if (count === 2 && openEnds === 2) return 100;
+          if (count === 2 && openEnds === 1) return 10;
+
+          return 0;
+        }
+
+        function evaluatePlayer(player) {
+          let score = 0;
+
+          for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+              if (board[r][c] !== player) continue;
+
+              for (let [dr, dc] of dirs) {
+                let count = 0;
+                let openEnds = 0;
+
+                for (let i = 0; i < winTarget; i++) {
+                  const nr = r + dr * i;
+                  const nc = c + dc * i;
+
+                  if (!inBounds(nr, nc)) break;
+
+                  if (board[nr][nc] === player) count++;
+                  else if (board[nr][nc] === '') {
+                    openEnds++;
+                    break;
+                  } else break;
+                }
+
+                const backR = r - dr;
+                const backC = c - dc;
+                if (inBounds(backR, backC) && board[backR][backC] === '') {
+                  openEnds++;
+                }
+
+                score += evaluateLine(count, openEnds);
+              }
+            }
+          }
+
+          return score;
+        }
+
+        function evaluate() {
+          return evaluatePlayer(aiPlayer) - evaluatePlayer(human);
+        }
+
+        function minimax(depth, alpha, beta, maximizing) {
+          if (checkWin(aiPlayer)) return 100000 - depth;
+          if (checkWin(human)) return depth - 100000;
+
+          if (depth === MAX_DEPTH) return evaluate();
+
+          const moves = getMoves();
+
+          // Sort moves by heuristic
+          moves.sort((a, b) => {
+            board[a[0]][a[1]] = aiPlayer;
+            let scoreA = evaluate();
+            board[a[0]][a[1]] = '';
+
+            board[b[0]][b[1]] = aiPlayer;
+            let scoreB = evaluate();
+            board[b[0]][b[1]] = '';
+
+            return scoreB - scoreA;
+          });
+
+          if (maximizing) {
+            let maxEval = -Infinity;
+
+            for (let [r, c] of moves) {
+              board[r][c] = aiPlayer;
+              const evalScore = minimax(depth + 1, alpha, beta, false);
+              board[r][c] = '';
+
+              maxEval = Math.max(maxEval, evalScore);
+              alpha = Math.max(alpha, evalScore);
+
+              if (beta <= alpha) break;
+            }
+
+            return maxEval;
+          } else {
+            let minEval = Infinity;
+
+            for (let [r, c] of moves) {
+              board[r][c] = human;
+              const evalScore = minimax(depth + 1, alpha, beta, true);
+              board[r][c] = '';
+
+              minEval = Math.min(minEval, evalScore);
+              beta = Math.min(beta, evalScore);
+
+              if (beta <= alpha) break;
+            }
+
+            return minEval;
+          }
+        }
+
+        // Win/block check
+        const moves = getMoves();
+
+        for (let [r, c] of moves) {
+          board[r][c] = aiPlayer;
+          if (checkWin(aiPlayer)) {
+            board[r][c] = '';
+            return [r, c];
+          }
+          board[r][c] = '';
+        }
+
+        for (let [r, c] of moves) {
+          board[r][c] = human;
+          if (checkWin(human)) {
+            board[r][c] = '';
+            return [r, c];
+          }
+          board[r][c] = '';
+        }
+
+        // Full search
+        let bestScore = -Infinity;
+        let bestMove = moves[0];
+
+        for (let [r, c] of moves) {
+          board[r][c] = aiPlayer;
+
+          const score = minimax(0, -Infinity, Infinity, false);
+
+          board[r][c] = '';
+
+          if (score > bestScore) {
+            bestScore = score;
+            bestMove = [r, c];
+          }
+        }
+
+        if (!bestMove) {
+          // Pick first empty cell
+          for (let r = 0; r < size; r++) {
+            for (let c = 0; c < size; c++) {
+              if (!board[r][c]) return [r, c];
+            }
+          }
+        }
+
+        return bestMove;
+      }
+    </script>
+  </body>
+</html>
