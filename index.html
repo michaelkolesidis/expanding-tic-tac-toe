@@ -1,6 +1,33 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+      if (navigator.onLine) {
+        const analyticsScript = document.createElement('script');
+        analyticsScript.async = true;
+        analyticsScript.src =
+          'https://www.googletagmanager.com/gtag/js?id=G-CLN0X1XD8N';
+        document.head.appendChild(analyticsScript);
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+          dataLayer.push(arguments);
+        }
+        gtag('js', new Date());
+        gtag('config', 'G-CLN0X1XD8N');
+      }
+    </script>
+    <script>
+      if (window.location.hostname === 'emojiminesweeper.vercel.app') {
+        const target = new URL('https://thumbfeed.com/emoji-minesweeper/');
+        const pathname = window.location.pathname
+          .replace(/^\/emoji-minesweeper\/?/, '')
+          .replace(/^\/+/, '');
+        target.pathname += pathname;
+        target.search = window.location.search;
+        target.hash = window.location.hash;
+        window.location.replace(target);
+      }
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -8,13 +35,27 @@
   </head>
   <body class="turn-x">
     <a href="https://thumbfeed.com" class="site-logo">
-      <img id="desktop-logo" class="site-logo-img" src="thumbfeed-logo-inline.svg" alt="Thumbfeed logo" />
-      <img id="mobile-logo" class="site-logo-img" src="thumbfeed-logo.svg" alt="Thumbfeed logo" />
+      <img
+        id="desktop-logo"
+        class="site-logo-img"
+        src="thumbfeed-logo-inline.svg"
+        alt="Thumbfeed logo"
+      />
+      <img
+        id="mobile-logo"
+        class="site-logo-img"
+        src="thumbfeed-logo.svg"
+        alt="Thumbfeed logo"
+      />
     </a>
 
     <header>
       <div id="logo-container">
-        <img id="logo" src="./expanding-tic-tac-toe.svg" alt="Expanding Tic-Tac-Toe logo" />
+        <img
+          id="logo"
+          src="./expanding-tic-tac-toe.svg"
+          alt="Expanding Tic-Tac-Toe logo"
+        />
       </div>
       <div id="status">X to play</div>
       <div id="instruction">
@@ -26,10 +67,38 @@
       <div id="board"></div>
 
       <div id="expansion-controls">
-        <button class="expand-trigger tl" type="button" aria-label="Expand board up and left" disabled>+</button>
-        <button class="expand-trigger tr" type="button" aria-label="Expand board up and right" disabled>+</button>
-        <button class="expand-trigger bl" type="button" aria-label="Expand board down and left" disabled>+</button>
-        <button class="expand-trigger br" type="button" aria-label="Expand board down and right" disabled>+</button>
+        <button
+          class="expand-trigger tl"
+          type="button"
+          aria-label="Expand board up and left"
+          disabled
+        >
+          +
+        </button>
+        <button
+          class="expand-trigger tr"
+          type="button"
+          aria-label="Expand board up and right"
+          disabled
+        >
+          +
+        </button>
+        <button
+          class="expand-trigger bl"
+          type="button"
+          aria-label="Expand board down and left"
+          disabled
+        >
+          +
+        </button>
+        <button
+          class="expand-trigger br"
+          type="button"
+          aria-label="Expand board down and right"
+          disabled
+        >
+          +
+        </button>
       </div>
     </div>
 
