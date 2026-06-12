@@ -1,0 +1,19 @@
+{
+  "framework": "vite",
+  "buildCommand": "pnpm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/expanding-tic-tac-toe/assets/:path*",
+      "destination": "/assets/:path*"
+    },
+    {
+      "source": "/expanding-tic-tac-toe",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/expanding-tic-tac-toe/:path*",
+      "destination": "/index.html"
+    }
+  ]
+}
