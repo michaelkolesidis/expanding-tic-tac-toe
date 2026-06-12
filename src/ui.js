@@ -156,8 +156,13 @@ export function createUi({ onCellClick }) {
   }
 
   function updateModeButtons(gameMode) {
-    elements.btnMulti.classList.toggle('active-mode', gameMode === 'multi');
-    elements.btnAi.classList.toggle('active-mode', gameMode === 'ai');
+    const isMultiActive = gameMode === 'multi';
+    const isAiActive = gameMode === 'ai';
+
+    elements.btnMulti.classList.toggle('active-mode', isMultiActive);
+    elements.btnMulti.disabled = isMultiActive;
+    elements.btnAi.classList.toggle('active-mode', isAiActive);
+    elements.btnAi.disabled = isAiActive;
   }
 
   function setExpansionControlsVisible(visible) {

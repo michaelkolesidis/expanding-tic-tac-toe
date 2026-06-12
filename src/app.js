@@ -72,6 +72,8 @@ export function startApp() {
   }
 
   function setMode(mode) {
+    if (state.gameMode === mode) return;
+
     state.gameMode = mode;
     reset();
   }

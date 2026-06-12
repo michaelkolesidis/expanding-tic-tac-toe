@@ -350,13 +350,17 @@ body.turn-o .cell:not(.x):not(.o):not(.ghost):hover {
   border-bottom: 5px solid #e2e8f0;
 }
 
+.mode-buttons button.active-mode {
+  cursor: default;
+}
+
 .reset-btn:hover,
-.mode-buttons button:hover,
+.mode-buttons button:not(.active-mode):hover,
 .rules-panel button:hover {
   background: #f1f5f9;
 }
 .reset-btn:active,
-.mode-buttons button:active,
+.mode-buttons button:not(.active-mode):active,
 .rules-panel button:active {
   transform: scale(0.93);
   border-bottom: 1px solid #e2e8f0;
@@ -398,9 +402,9 @@ button.active-mode {
     user-select: none;
   }
   .reset-btn:hover,
-  .mode-buttons button:hover,
+  .mode-buttons button:not(.active-mode):hover,
   .reset-btn:active,
-  .mode-buttons button:active,
+  .mode-buttons button:not(.active-mode):active,
   .rules-panel button:hover,
   .rules-panel button:active {
     background: #fff;
